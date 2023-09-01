@@ -38,7 +38,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 mordecai3 = [
-    "assets/admin1CodesASCII.json",
+    "assets/admin1CodesASCII.txt",
     "assets/country_bert_768.npy",
     "assets/countryInfo.txt",
     "assets/feature_code_dict.json",
