@@ -22,7 +22,7 @@ def default(obj):
             return obj.tolist()
         else:
             return obj.item()
-    raise TypeError('Unknown type:', type(obj))
+    raise TypeError("Unknown type:", type(obj))
 
 
 spacy_doc_setup()
@@ -36,10 +36,11 @@ def load_nlp():
     nlp.add_pipe("token_tensors")
     return nlp
 
+
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def setup_es():
     kwargs = dict(
-        hosts=['localhost'],
+        hosts=["localhost"],
         port=9200,
         use_ssl=False,
     )
@@ -47,15 +48,15 @@ def setup_es():
     conn = Search(using=CLIENT, index="geonames")
     return conn
 
+
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def load_model():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = geoparse_model(device = device,
-                                bert_size = 768,
-                                num_feature_codes=54)
+    model = geoparse_model(device=device, bert_size=768, num_feature_codes=54)
     model.load_state_dict(torch.load("../mordecai3/mordecai_new.pt"))
     model.eval()
     return model
+
 
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def load_trf():
@@ -63,8 +64,7 @@ def load_trf():
     return trf
 
 
-
-st.title('Mordecai geoparsing (v3)')
+st.title("Mordecai geoparsing (v3)")
 nlp = load_nlp()
 conn = setup_es()
 model = load_model()
@@ -72,17 +72,19 @@ trf = load_trf()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
-icews_cat = st.sidebar.text_input(label='CAMEO/ICEWS event description (e.g. "Use conventional military force")',
-                                  value="")
-freeform_qa = st.sidebar.text_input(label='Advanced option: write a complete question here.")',
-                                   value="")
+icews_cat = st.sidebar.text_input(
+    label='CAMEO/ICEWS event description (e.g. "Use conventional military force")',
+    value="",
+)
+freeform_qa = st.sidebar.text_input(
+    label='Advanced option: write a complete question here.")', value=""
+)
 
-#= "Afghanistan's major population centers are all government-held, with capital city Kabul especially well-fortified, though none are immune to occasional attacks by Taliban operatives. And though the conflict sometimes seems to engulf the whole country, the provinces of Panjshir, Bamyan, and Nimroz stand out as being mostly free of Taliban influence."
-#default_text = 'A "scorched earth"-type policy was used in the city of New York City and the north-western governorate of Idleb.'
+# = "Afghanistan's major population centers are all government-held, with capital city Kabul especially well-fortified, though none are immune to occasional attacks by Taliban operatives. And though the conflict sometimes seems to engulf the whole country, the provinces of Panjshir, Bamyan, and Nimroz stand out as being mostly free of Taliban influence."
+# default_text = 'A "scorched earth"-type policy was used in the city of New York City and the north-western governorate of Idleb.'
 default_text = """Speaking from Berlin, President Obama expressed his hope for a peaceful resolution to the fighting in Homs and Aleppo."""
 text = st.text_area("Text to geoparse", default_text)
 doc = nlp(text)
-
 
 
 print("Doc ents: ", doc.ents)
@@ -98,19 +100,13 @@ if doc_ex:
             pred_val = model(input)
 
 if freeform_qa:
-    QA_input = {
-            'question': freeform_qa,
-            'context':text
-        }
+    QA_input = {"question": freeform_qa, "context": text}
     res = trf(QA_input)
     event_doc = add_event_loc(doc, res)
 elif icews_cat:
-    #question = f"Where did {icews_cat.lower()} happen?"
+    # question = f"Where did {icews_cat.lower()} happen?"
     question = f"Which place did {icews_cat.lower()} happen?"
-    QA_input = {
-            'question': question,
-            'context':text
-        }
+    QA_input = {"question": question, "context": text}
     res = trf(QA_input)
     event_doc = add_event_loc(doc, res)
 else:
@@ -122,49 +118,59 @@ html = html.replace("\n", " ")
 st.write(HTML_WRAPPER.format(html), unsafe_allow_html=True)
 
 
-#try:
+# try:
 if len(doc_ex) == 0:
     st.text("No entities found.")
 elif len(es_data) == 0:
     st.text("No entities found.")
 else:
     pretty = []
-    for (ent, pred) in zip(es_data, pred_val):
-        st.markdown("**Place name**: {}".format(ent['search_name']))
-        print(len(ent['es_choices']))
-        if len(ent['es_choices']) < 10:
-            print(ent['es_choices'])
+    for ent, pred in zip(es_data, pred_val):
+        st.markdown("**Place name**: {}".format(ent["search_name"]))
+        print(len(ent["es_choices"]))
+        if len(ent["es_choices"]) < 10:
+            print(ent["es_choices"])
         for n, score in enumerate(pred):
-            if n < len(ent['es_choices']):
-                ent['es_choices'][n]['score'] = score.item() # torch tensor --> float
-        results = [e for e in ent['es_choices'] if 'score' in e.keys()]
+            if n < len(ent["es_choices"]):
+                ent["es_choices"][n]["score"] = score.item()  # torch tensor --> float
+        results = [e for e in ent["es_choices"] if "score" in e.keys()]
         if not results:
             st.text("(no results)")
         if results:
-            results = sorted(results, key=lambda k: -k['score'])
-            results = [i for i in results if i['score'] > 0.01]
+            results = sorted(results, key=lambda k: -k["score"])
+            results = [i for i in results if i["score"] > 0.01]
             print(results)
             results = results[:3]
             best = results[0]
-            pretty.append({"lat": float(best['lat']), "lon": float(best['lon']), "name": best['name']})
+            pretty.append(
+                {
+                    "lat": float(best["lat"]),
+                    "lon": float(best["lon"]),
+                    "name": best["name"],
+                }
+            )
 
             for n, i in enumerate(results):
                 if n == 0:
-                    st.text(f"✔️ {i['name']} ({i['feature_code']}), {i['admin1_name']}, {i['country_code3']} ({i['geonameid']}): {i['score']}")
+                    st.text(
+                        f"✔️ {i['name']} ({i['feature_code']}), {i['admin1_name']}, {i['country_code3']} ({i['geonameid']}): {i['score']}"
+                    )
                     if len(results) > 1:
                         st.text("Other choices: ")
                 else:
-                    st.text(f"* {i['name']} ({i['feature_code']}), {i['admin1_name']}, {i['country_code3']} ({i['geonameid']}): {i['score']}")
+                    st.text(
+                        f"* {i['name']} ({i['feature_code']}), {i['admin1_name']}, {i['country_code3']} ({i['geonameid']}): {i['score']}"
+                    )
 
-    map = st.sidebar.checkbox("Show map", value = False)
+    map = st.sidebar.checkbox("Show map", value=False)
     if map:
         st.subheader("Map")
         df = pd.DataFrame(pretty)
         st.map(df)
-    show_raw = st.sidebar.checkbox("Show raw output", value = False)
+    show_raw = st.sidebar.checkbox("Show raw output", value=False)
     if show_raw:
         st.subheader("Raw JSON result")
-        #dumped = json.dumps(es_data, default=default)
+        # dumped = json.dumps(es_data, default=default)
         st.json(es_data)
-#except NameError:
+# except NameError:
 #    st.text("No entities found.")
