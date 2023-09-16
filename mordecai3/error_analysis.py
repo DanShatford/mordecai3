@@ -6,12 +6,13 @@ import numpy as np
 import torch
 import typer
 import wandb
-from error_utils import evaluate_results, make_wandb_dict
 from rich.console import Console
 from rich.table import Table
 from torch.utils.data import DataLoader
-from torch_model import TrainData, geoparse_model
-from train import load_data
+
+from mordecai3.error_utils import evaluate_results, make_wandb_dict
+from mordecai3.torch_model import TrainData, geoparse_model
+from mordecai3.train import load_data
 
 logger = logging.getLogger()
 handler = logging.StreamHandler()

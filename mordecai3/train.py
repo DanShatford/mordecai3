@@ -19,15 +19,11 @@ from spacy.tokens import DocBin
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-# Currently getting this error: ImportError: attempted relative import with no known parent package
-# when I run the line below.
-# from .mordecai_utilities import spacy_doc_setup
-import elastic_utilities as es_util
-from error_utils import make_wandb_dict
-from geoparse import guess_in_rel
-from mordecai_utilities import spacy_doc_setup
-from torch_model import TrainData, geoparse_model
-
+import mordecai3.elastic_utilities as es_util
+from mordecai3.error_utils import make_wandb_dict
+from mordecai3.geoparse import guess_in_rel
+from mordecai3.mordecai_utilities import spacy_doc_setup
+from mordecai3.torch_model import TrainData, geoparse_model
 
 logger = logging.getLogger()
 handler = logging.StreamHandler()

@@ -8,7 +8,7 @@ from spacy.language import Language
 from spacy.tokens import Token
 from torch_model import geoparse_model
 
-from .geoparse import Geoparser
+from mordecai3.geoparse import Geoparser
 
 HTML_WRAPPER = """<div style="overflow-x: auto; border: 1px solid #e6e9ef; border-radius: 0.25rem; padding: 1rem; margin-bottom: 2.5rem">{}</div>"""
 
