@@ -493,7 +493,7 @@ class Geoparser:
                     best["end_char"] = ent["end_char"]
                     # Add in city info here
                     best["city_id"], best["city_name"] = self.lookup_city(best)
-                if results and not debug:
+                if results and debug:
                     logger.debug("Returning top 4 predicted results for each location")
                     best = results[0:4]
                     for b in best:
